@@ -1,5 +1,5 @@
 <?php
-namespace Signature;
+namespace Tests\Signature;
 
 /**
  * @author Warnar Boekkooi
@@ -14,7 +14,7 @@ class UtilityTest extends \PHPUnit_Framework_TestCase {
 
 	protected function setUp()
 	{
-		$this->util = new \OAuth\Server\Signature\Utility();
+		$this->util = new \Tests\Signature\Utility();
 	}
 
 	protected function tearDown()
@@ -62,11 +62,8 @@ class UtilityTest extends \PHPUnit_Framework_TestCase {
 	 * @dataProvider validMethodProviders
 	 */
 	public function testGetSignatureInfo($method, $expected)
-	{
-		$reflection = new \ReflectionMethod('\OAuth\Server\Signature\Utility', 'getSignatureInfo');
-		$reflection->setAccessible(true);
-		
-		$this->assertEquals($expected, $reflection->invoke($this->util, $method));
+	{		
+		$this->assertEquals($expected, $this->util->getSignatureInfo($method));
 	}
 
 	/**
@@ -74,11 +71,8 @@ class UtilityTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function testFailGetSignatureInfo($method)
 	{
-		$reflection = new \ReflectionMethod('\OAuth\Server\Signature\Utility', 'getSignatureInfo');
-		$reflection->setAccessible(true);
-
 		try {
-			$reflection->invoke($this->util, $method);
+			$this->util->getSignatureInfo($method);
 			$this->fail('expected exception');
 		} catch (\RuntimeException $e) {
 			$expected = 'Unsupported signature method: ' . $method . '. Supported are HMAC-SHA1, PLAINTEXT and HMAC-SHA256';

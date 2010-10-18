@@ -1,18 +1,3 @@
-/*
-Navicat MySQL Data Transfer
-
-Source Server         : Jobability
-Source Server Version : 50141
-Source Host           : ja:3306
-Source Database       : oauth_test
-
-Target Server Type    : MYSQL
-Target Server Version : 50141
-File Encoding         : 65001
-
-Date: 2010-10-11 09:23:19
-*/
-
 SET FOREIGN_KEY_CHECKS=0;
 -- ----------------------------
 -- Table structure for `consumer`

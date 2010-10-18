@@ -1,5 +1,5 @@
 <?php
-namespace Request;
+namespace Tests\Request;
 
 /**
  * @author Warnar Boekkooi
@@ -14,8 +14,7 @@ class RequestAbstractTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		// TODO create mock object
-		$this->request = new \OAuth\Server\Request\Initiate();
+		$this->request = new \Tests\Mock\Request\RequestAbstract();
 	}
 
 	protected function tearDown()
@@ -71,12 +70,9 @@ class RequestAbstractTest extends \PHPUnit_Framework_TestCase
 
     public function testValidateArray()
     {
-		$reflection = new \ReflectionMethod('\OAuth\Server\Request\RequestAbstract', 'validateArray');
-		$reflection->setAccessible(true);
-
         $arr = array();
         try {
-            $this->assertFalse($reflection->invoke($this->request, $arr));
+            $this->assertFalse($this->request->validateArray($arr));
 			$this->fail('expected exception');
         } catch (\RuntimeException $e) {
             $this->assertEquals('No configuration has been set', $e->getMessage());
@@ -84,41 +80,41 @@ class RequestAbstractTest extends \PHPUnit_Framework_TestCase
 
         $this->request->setConfig(new \OAuth\Server\Config());
 
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_consumer_key'] = 'a';
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_signature_method'] = 'a';
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_signature_method'] = 'PLAINTEXT';
-        $this->assertTrue($reflection->invoke($this->request, $arr));
+        $this->assertTrue($this->request->validateArray($arr));
 
         $arr['oauth_signature_method'] = 'HMAC-SHA1';
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_nonce'] = 'a';
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_timestamp'] = 'a';
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_timestamp'] = 1;
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_timestamp'] = strtotime('-2 day');
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_timestamp'] = strtotime('+2 day');
-        $this->assertFalse($reflection->invoke($this->request, $arr));
+        $this->assertFalse($this->request->validateArray($arr));
 
         $arr['oauth_timestamp'] = time();
-        $this->assertTrue($reflection->invoke($this->request, $arr));
+        $this->assertTrue($this->request->validateArray($arr));
     }
 
 	public function testAnalyze()
-    {
+    {        
         $config = new \OAuth\Server\Config();
         $this->request->setConfig($config);
 
@@ -133,6 +129,8 @@ class RequestAbstractTest extends \PHPUnit_Framework_TestCase
 
     public function testAnalyzeHeader()
     {
+        $this->assertNull($this->request->getRequestUri());
+        
         $config = new \OAuth\Server\Config();
         $this->request->setConfig($config);
 
@@ -141,6 +139,7 @@ class RequestAbstractTest extends \PHPUnit_Framework_TestCase
         $request->setHeader('Authorization', $config->getHttpUtility()->toAuthorizationHeader($params));
         $this->request->analyze($request);
         $this->assertEquals($params, $this->request->getRawParams());
+        $this->assertEquals($this->request->getRequestUri(), 'http://:');
 	}
 
     public function testFailAnalyzeHeader()

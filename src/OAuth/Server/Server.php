@@ -41,9 +41,6 @@ class Server {
 	 */
     public function __construct(Config $configuration)
     {
-		if (!($configuration instanceof Config)) {
-			throw new \InvalidArgumentException('Argument `configuration` must be a instance of \OAuth\Server\Config.');
-		}
 		$this->cfg = $configuration;
     }
 

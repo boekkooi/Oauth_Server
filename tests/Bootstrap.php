@@ -1,31 +1,26 @@
 <?php
-// phpunit --bootstrap tests/Bootstrap.php --coverage-html ./report --verbose tests/
-function oauth_autoload($class)
+// Validate php version
+function default_autoload($class)
 {
-    if (strpos(ltrim($class, '\\'), 'OAuth\\Server\\') !== 0) {
-        return false;
+    if (strpos(ltrim($class, '\\'), 'OAuth\\Server\\') === 0) {
+        $class = str_replace(array('OAuth\\', '_', '\\', '/'), DIRECTORY_SEPARATOR, $class);
+
+        $path = realpath(__DIR__ . '/../src/OAuth/' . $class . '.php');
+        if ($path !== false) {
+            include $path;
+            return;
+        }
     }
-    $class = str_replace(array('OAuth\\', '_', '\\'), '/', $class);
+    if (strpos(ltrim($class, '\\'), 'Tests\\') === 0) {
+        $class = str_replace(array('Tests\\', '_', '\\', '/'), DIRECTORY_SEPARATOR, $class);
 
-	$path = realpath(__DIR__ . '/../OAuth/' . $class . '.php');
-	if (!$path) {
-        return false;
-	}
-    include $path;
-}
-spl_autoload_register("oauth_autoload");
-
-function zend_autoload($class)
-{
-    if (strpos($class, 'Zend_') !== 0) {
-        return false;
+        $path = realpath(__DIR__ . '/Mock/' . $class . '.php');
+        if ($path !== false) {
+            include $path;
+            return;
+        }
     }
-    $class = str_replace(array('_', '\\'), '/', $class);
 
-	$path = realpath(__DIR__ . '/../' . $class . '.php');
-	if (!$path) {
-        return false;
-	}
-    include $path;
+    @include str_replace(array('\\', '_', '/'), DIRECTORY_SEPARATOR, $class) . '.php';
 }
-spl_autoload_register("zend_autoload");
+spl_autoload_register("default_autoload");

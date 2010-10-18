@@ -35,10 +35,6 @@ class Authorize extends RequestAbstract
 	 */
 	public function analyze(\Zend_Controller_Request_Http $httpRequest)
 	{
-		if (!($httpRequest instanceof \Zend_Controller_Request_Http)) {
-			throw new \InvalidArgumentException('`request` must be a instance of `Zend_Controller_Request_Http`');
-		}
-
         // Get the temporary credentials identifier
         $query = $httpRequest->getQuery();
         if (!empty($query['oauth_token'])) {

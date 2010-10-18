@@ -1,5 +1,5 @@
 <?php
-namespace Http;
+namespace Tests\Http;
 
 /**
  * @author Warnar Boekkooi

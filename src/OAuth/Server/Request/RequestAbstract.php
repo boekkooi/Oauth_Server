@@ -66,10 +66,6 @@ class RequestAbstract implements RequestInterface
 	 */
 	public function analyze(\Zend_Controller_Request_Http $request)
 	{
-		if (!($request instanceof \Zend_Controller_Request_Http)) {
-			throw new \InvalidArgumentException('`request` must be a instance of `Zend_Controller_Request_Http`');
-		}
-
 		// Set the requested url
 		$this->requestUrl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getRequestUri();
 

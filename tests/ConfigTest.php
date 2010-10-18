@@ -1,9 +1,11 @@
 <?php
+namespace Tests;
+
 /**
  * @author Warnar Boekkooi
  * Created on: 8-10-10 14:24
  */ 
-class ConfigTest extends PHPUnit_Framework_TestCase
+class ConfigTest extends \PHPUnit_Framework_TestCase
 {
 	public function testConstructorEmpty()
 	{
@@ -12,7 +14,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 		try {
 			$config->getStorage();
 			$this->fail('expected exception');
-		} catch (RuntimeException $e) {
+		} catch (\RuntimeException $e) {
 			$this->assertEquals('No storage object has been set.', $e->getMessage());
 		}
 
@@ -81,7 +83,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 		try {
 			new \OAuth\Server\Config('crash');
 			$this->fail('expected exception');
-		} catch (InvalidArgumentException $e) {
+		} catch (\InvalidArgumentException $e) {
 			$this->assertEquals('Options must be a array or a instance of Zend_Config', $e->getMessage());
 		}
 	}
@@ -120,7 +122,7 @@ class ConfigTest extends PHPUnit_Framework_TestCase
 		try {
 			$config->{$getter}();
 			$this->fail('expected exception');
-		} catch (RuntimeException $e) {
+		} catch (\RuntimeException $e) {
 			$this->assertEquals(
 				sprintf('`%s` must be a instance of \OAuth\Server\Request\RequestInterface', $name),
 				$e->getMessage()

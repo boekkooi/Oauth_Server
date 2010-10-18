@@ -1,0 +1,14 @@
+<phpunit bootstrap="./Bootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true">
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./../src/</directory>
+        </whitelist>
+    </filter>
+    <logging>
+        <log type="coverage-html" target="./../report" charset="UTF-8" highlight="true"/>
+    </logging>
+</phpunit>

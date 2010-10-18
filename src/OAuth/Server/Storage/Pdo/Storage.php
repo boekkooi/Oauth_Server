@@ -270,15 +270,17 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	protected function execSingleRow($sql, array $params) {
 		$statement = $this->db->prepare($sql);
 		$this->db->beginTransaction();
-        if ($statement->execute($params)) {
-			if ($statement->rowCount() === 1) {
-				$this->db->commit();
-				return true;
-			}
+        try {
+            if ($statement->execute($params)) {
+                if ($statement->rowCount() === 1) {
+                    $this->db->commit();
+                    return true;
+                }
+            }
+        } catch (\PDOException $e) {
         }
-		
-		$this->db->rollBack();
-		return false;
+        $this->db->rollBack();
+        return false;
 	}
 	
 	protected function fetchSingleScalar($sql, array $params, $default = null)
