@@ -64,10 +64,10 @@ class Utility {
         $signatureMethod = strtoupper($method);
         $parts     = explode('-', $signatureMethod);
         if (count($parts) > 1) {
-            $className = '\OAuth\Server\Signature\\' . ucfirst(strtolower($parts[0]));
+            $className = 'OAuth\Server\Signature\\' . ucfirst(strtolower($parts[0]));
             $hashAlgorithm  = $parts[1];
         } else {
-            $className = '\OAuth\Server\Signature\\' . ucfirst(strtolower($signatureMethod));
+            $className = 'OAuth\Server\Signature\\' . ucfirst(strtolower($signatureMethod));
         }
 
 		return array($className, $hashAlgorithm);
@@ -92,6 +92,14 @@ class Utility {
 
         // Create the signature class and verify the send oauth_signature
         $signatureObject = new $className($consumerSecret, $tokenSecret, $hashAlgorithm);
-        return $signatureObject->verify($params['oauth_signature'], $params, $responseMethod, $requestUrl);
+        $rtn = $signatureObject->verify($params['oauth_signature'], $params, $responseMethod, $requestUrl);
+
+		// Some consumers don't agree with the optional part of oauth_version so let's add this extra check in case the signature fails
+		if (!isset($params['oauth_version']) && $rtn === false) {
+			$params['oauth_version'] = '1.0';
+        	$rtn = $signatureObject->verify($params['oauth_signature'], $params, $responseMethod, $requestUrl);
+		}
+
+		return $rtn;
     }
 }

@@ -85,15 +85,15 @@ class Server {
 		$storage = $this->cfg->getStorage();
 		
         // Get the temporary credentials identifier
-        $token = $request->getParam('token');
+        $token = $request->getParam('oauth_token');
 		if (empty($token)) {
-            throw new \Exception('Invalid request t');
+            throw new \Exception('Invalid request');
 		}
 
         // Get a oauth verification code.
         $verifyCode = $storage->createVerificationCode($token, $user);
         if (empty($verifyCode)) {
-            throw new \Exception('Invalid request v');
+            throw new \Exception('Invalid request');
         }
 
         // Get the callback URI
@@ -142,7 +142,7 @@ class Server {
 
         // Validate oauth verification code
         if (!$storage->isValidVerifierCode($request->getParam('oauth_verifier'), $request->getParam('token'), $request->getParam('consumer_key'))) {
-            throw new \Exception('Invalid request. la');
+            throw new \Exception('Invalid request.');
         }
 
         // Get a token identifier and shared-secret
@@ -170,6 +170,19 @@ class Server {
 		$this->verifyAccessRequest($request);
 		
 		return true;
+	}
+
+	public function getAccessInformation(\Zend_Controller_Request_Http $httpRequest) {
+        // Create a server request and analyze the given httpRequest
+		$request = $this->cfg->getAccessRequest();
+		$request->setConfig($this->cfg)->analyze($httpRequest);
+
+		// Verify the access request
+		$this->verifyAccessRequest($request);
+
+		// Get information
+		$storage = $this->cfg->getStorage();
+		return $storage->getAccessInformation($request->getParam('token'), $request->getParam('consumer_key'));
 	}
 
 	/**

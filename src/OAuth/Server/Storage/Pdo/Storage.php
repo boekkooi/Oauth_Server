@@ -67,7 +67,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
      */
     public function getCustomerSecret($consumerKey)
     {
-		$sql = 'SELECT `secret` FROM `consumer` WHERE `key` = :consumerKey';
+		$sql = 'SELECT `secret` FROM `oauth_consumer` WHERE `key` = :consumerKey';
 		$params = array('consumerKey' => $consumerKey);
 
 		return $this->fetchSingleScalar($sql, $params);
@@ -82,7 +82,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
      */
     public function getCallbackUri($temporaryToken)
     {
-        $sql = 'SELECT `callbackUri` FROM `consumer_temporary` WHERE `token` = :token';
+        $sql = 'SELECT `callbackUri` FROM `oauth_consumer_temporary` WHERE `token` = :token';
 		$params = array('token' => $temporaryToken);
 
 		return $this->fetchSingleScalar($sql, $params);
@@ -98,7 +98,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
     public function createTemporaryCredentials($consumerKey, $callbackUri = null)
     {
 		// Get the customer id
-		$sql = 'SELECT `id` FROM `consumer` WHERE `key` = :consumerKey';
+		$sql = 'SELECT `id` FROM `oauth_consumer` WHERE `key` = :consumerKey';
 		$params = array('consumerKey' => $consumerKey);
 		$customId = $this->fetchSingleScalar($sql, $params);
 		if ($customId === null) {
@@ -109,7 +109,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 		$credentials = $this->createCredentials();
 
 		// Insert credentials
-        $sql = 'INSERT INTO `consumer_temporary` (`consumerId`, `token`, `secret`, `callbackUri`, `created`) VALUES (:consumerId, :token, :secret, :callbackUri, CURRENT_TIMESTAMP)';
+        $sql = 'INSERT INTO `oauth_consumer_temporary` (`consumer_id`, `token`, `secret`, `callbackUri`, `created`) VALUES (:consumerId, :token, :secret, :callbackUri, CURRENT_TIMESTAMP)';
         $params = array(
             'consumerId' => $customId,
             'token' => $credentials->getToken(),
@@ -131,7 +131,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
     {
 		$verifierCode = Credentials::generateString();
 
-        $sql = 'UPDATE `consumer_temporary` SET `verifyCode` = :verifyCode, `user_id` = :user WHERE `consumer_temporary`.`token` = :token';
+        $sql = 'UPDATE `oauth_consumer_temporary` SET `verifyCode` = :verifyCode, `user_id` = :user WHERE `oauth_consumer_temporary`.`token` = :token';
 		$params = array(
             'token' => $temporaryToken,
             'verifyCode' => $verifierCode,
@@ -149,7 +149,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	 * @return string|null The temporary token secret secret or NULL when the temporary token is unknown.
 	 */
 	public function getTemporaryTokenSecret($token) {
-        $sql = 'SELECT `secret` FROM `consumer_temporary` WHERE `token` = :token';
+        $sql = 'SELECT `secret` FROM `oauth_consumer_temporary` WHERE `token` = :token';
 		$params = array('token' => $token);
 
 		return $this->fetchSingleScalar($sql, $params);
@@ -163,13 +163,30 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	 * @return string|null The token secret secret or NULL when the token is unknown.
 	 */
 	public function getTokenSecret($token, $consumerKey) {
-        $sql = 'SELECT `t`.`secret` FROM `consumer_access_token` AS `t`
-        	INNER JOIN `consumer_access` AS `a` ON `a`.`id` = `t`.`consumer_access_id`
-        	INNER JOIN `consumer` AS `c` ON `c`.`id` = `a`.`consumer_id` AND `c`.`key` = :consumerKey
+        $sql = 'SELECT `t`.`secret` FROM `oauth_consumer_access_token` AS `t`
+        	INNER JOIN `oauth_consumer_access` AS `a` ON `a`.`id` = `t`.`consumer_access_id`
+        	INNER JOIN `oauth_consumer` AS `c` ON `c`.`id` = `a`.`consumer_id` AND `c`.`key` = :consumerKey
         	WHERE `t`.`token` = :token';
 		$params = array('token' => $token, 'consumerKey' => $consumerKey);
 
 		return $this->fetchSingleScalar($sql, $params);
+	}
+
+	public function getAccessInformation($token, $consumerKey) {
+        $sql = 'SELECT `a`.`user_id`, `a`.`consumer_id` FROM `oauth_consumer_access` AS `a`
+        	INNER JOIN `oauth_consumer` AS `c` ON `c`.`id` = `a`.`consumer_id` AND `c`.`key` = :consumerKey
+        	INNER JOIN `oauth_consumer_access_token` AS `t` ON `t`.`token` = :token AND `t`.`consumer_access_id` = `a`.`id`';
+		$params = array('token' => $token, 'consumerKey' => $consumerKey);
+
+		$row = $this->fetchSingleRow($sql, $params);
+		if (empty($row)) {
+			return null;
+		}
+
+		$information = new \OAuth\Server\AccessInformation();
+		$information->setConsumerId($row['consumer_id']);
+		$information->setUserId($row['user_id']);
+		return $information;
 	}
 
 	/**
@@ -181,7 +198,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	 */
 	public function createAccessCredentials($verifierCode, $temporaryToken, $consumerKey) {
 		// Get userId and consumerId
-        $sql = 'SELECT `t`.`user_id`, `t`.`consumerId` FROM `consumer_temporary` AS `t` INNER JOIN `consumer` AS `c` ON `c`.id = `t`.`consumerId` AND `c`.`key` = :consumerKey WHERE `t`.`token` = :token AND `t`.`verifyCode` = :verifyCode';
+        $sql = 'SELECT `t`.`user_id`, `t`.`consumer_id` FROM `oauth_consumer_temporary` AS `t` INNER JOIN `oauth_consumer` AS `c` ON `c`.id = `t`.`consumer_id` AND `c`.`key` = :consumerKey WHERE `t`.`token` = :token AND `t`.`verifyCode` = :verifyCode';
 		$params = array(
 			'token' => $temporaryToken,
 			'verifyCode' => $verifierCode,
@@ -193,7 +210,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 		}
 
 		// Delete temp token
-		if (!$this->execSingleRow('DELETE FROM `token` WHERE `token` = :token ', array('token' => $temporaryToken))) {
+		if (!$this->execSingleRow('DELETE FROM `oauth_token` WHERE `token` = :token ', array('token' => $temporaryToken))) {
 			return null;
 		}
 
@@ -202,10 +219,10 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
             'consumerId' => $row[1],
             'userId' => $row[0]
         );
-		$sql = 'SELECT `id` FROM `consumer_access` WHERE `user_id`= :userId AND `consumer_id` = :consumerId';
+		$sql = 'SELECT `id` FROM `oauth_consumer_access` WHERE `user_id`= :userId AND `consumer_id` = :consumerId';
 		$id = $this->fetchSingleScalar($sql, $params);
 		if ($id === null) {
-			$insertSql = 'INSERT INTO `consumer_access` (`user_id`, `consumer_id`) VALUES (:userId, :consumerId)';
+			$insertSql = 'INSERT INTO `oauth_consumer_access` (`user_id`, `consumer_id`) VALUES (:userId, :consumerId)';
 			if (!$this->execSingleRow($insertSql, $params)) {
 				return null;
 			}
@@ -216,7 +233,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 		$credentials = $this->createCredentials();
 
 		// Insert credentials
-        $sql = 'INSERT INTO `consumer_access_token` (`consumer_access_id`, `token`, `secret`) VALUES (:consumerAccessId, :token, :secret)';
+        $sql = 'INSERT INTO `oauth_consumer_access_token` (`consumer_access_id`, `token`, `secret`) VALUES (:consumerAccessId, :token, :secret)';
         $params = array(
             'token' => $credentials->getToken(),
             'secret' => $credentials->getSecret(),
@@ -236,7 +253,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	 * @return boolean True if the verification code is valid else FALSE.
 	 */
 	public function isValidVerifierCode($verifierCode, $temporaryToken, $consumerKey) {
-        $sql = 'SELECT `t`.`id` FROM `consumer_temporary` AS t INNER JOIN `consumer` AS `c` ON `c`.id = `t`.`consumerId` AND `c`.`key` = :consumerKey WHERE `t`.`token` = :token AND `t`.`verifyCode` = :verifyCode';
+        $sql = 'SELECT `t`.`id` FROM `oauth_consumer_temporary` AS t INNER JOIN `oauth_consumer` AS `c` ON `c`.id = `t`.`consumer_id` AND `c`.`key` = :consumerKey WHERE `t`.`token` = :token AND `t`.`verifyCode` = :verifyCode';
 		$params = array(
 			'token' => $temporaryToken,
 			'verifyCode' => $verifierCode,
@@ -257,7 +274,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	 * @return bool
 	 */
 	public function isValidTokenRequest($token, $nonce, $timestamp) {
-        $sql = 'INSERT INTO `token_request` (`token`, `nonce`, `timestamp`) VALUES (:token, :nonce, :ts)';
+        $sql = 'INSERT INTO `oauth_token_request` (`token`, `nonce`, `timestamp`) VALUES (:token, :nonce, :ts)';
         $params = array(
             'token' => $token,
             'nonce' => $nonce,
@@ -317,7 +334,7 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 
 			// Add the token to the token table
 			// Insert credentials
-			$sql = 'INSERT INTO `token` (`token`) VALUES (:token)';
+			$sql = 'INSERT INTO `oauth_token` (`token`) VALUES (:token)';
 			$params = array(
 				'token' => $credentials->getToken()
 			);

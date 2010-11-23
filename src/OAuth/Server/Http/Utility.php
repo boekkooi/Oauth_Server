@@ -47,7 +47,8 @@ class Utility extends \Zend_Oauth_Http_Utility {
         foreach ($parts as $pair) {
             $kv = explode('=', $pair);
 			$v = trim(rawurldecode($kv[1]), '"');
-            $params[rawurldecode($kv[0])] = $v;
+			$k = trim(rawurldecode($kv[0]));
+            $params[$k] = $v;
         }
         return $params;
     }
