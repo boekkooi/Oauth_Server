@@ -9,7 +9,7 @@ CREATE TABLE `oauth_consumer` (
   `secret` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `oauth_consumer_key_secret` (`key`,`secret`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for `oauth_consumer_access`
@@ -25,7 +25,7 @@ CREATE TABLE `oauth_consumer_access` (
   KEY `oauth_consumer_access_consumer_id_idx` (`consumer_id`),
   CONSTRAINT `oauth_consumer_access_ibfk_2` FOREIGN KEY (`consumer_id`) REFERENCES `oauth_consumer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `oauth_consumer_access_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `oauth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for `oauth_consumer_access_token`
@@ -41,7 +41,7 @@ CREATE TABLE `oauth_consumer_access_token` (
   KEY `oauth_consumer_access_token_consumer_access_id_idx` (`consumer_access_id`),
   CONSTRAINT `oauth_consumer_access_token_ibfk_1` FOREIGN KEY (`consumer_access_id`) REFERENCES `oauth_consumer_access` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `oauth_consumer_access_token_ibfk_2` FOREIGN KEY (`token`) REFERENCES `oauth_token` (`token`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for `oauth_consumer_temporary`
@@ -63,7 +63,7 @@ CREATE TABLE `oauth_consumer_temporary` (
   CONSTRAINT `oauth_consumer_temporary_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `oauth_user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `oauth_consumer_temporary_ibfk_2` FOREIGN KEY (`consumer_id`) REFERENCES `oauth_consumer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `oauth_consumer_temporary_ibfk_3` FOREIGN KEY (`token`) REFERENCES `oauth_token` (`token`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for `oauth_token`
@@ -77,17 +77,15 @@ CREATE TABLE `oauth_token` (
 -- ----------------------------
 -- Table structure for `oauth_token_request`
 -- ----------------------------
-DROP TABLE IF EXISTS `oauth_token_request`;
-CREATE TABLE `oauth_token_request` (
+DROP TABLE IF EXISTS `oauth_request`;
+CREATE TABLE `oauth_request` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `token` varchar(255) NOT NULL,
+  `request` varchar(255) NOT NULL,
   `nonce` varchar(50) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `oauth_token_request_tnt` (`token`,`nonce`,`timestamp`),
-  KEY `oauth_token_request_token_idx` (`token`),
-  CONSTRAINT `oauth_token_request_ibfk_1` FOREIGN KEY (`token`) REFERENCES `oauth_token` (`token`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `oauth_request_rnt` (`request`,`nonce`,`timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for `oauth_user`
@@ -102,4 +100,4 @@ CREATE TABLE `oauth_user` (
   UNIQUE KEY `oauth_user_email` (`email`),
   KEY `oauth_user_role_id_idx` (`role_id`),
   CONSTRAINT `oauth_user_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `acl_role` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

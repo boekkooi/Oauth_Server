@@ -36,7 +36,7 @@ interface StorageInterface
      * @param string $consumerKey A client credentials identifier.
      * @return string|null The consumer secret or NULL when the consumer is unknown.
      */
-    public function getCustomerSecret($consumerKey);
+    function getCustomerSecret($consumerKey);
     
     /**
      * Get temporary credentials for the first part of the authentication process
@@ -45,7 +45,7 @@ interface StorageInterface
      * @param string $consumerKey A client credentials identifier.
      * @return void
      */
-    public function createTemporaryCredentials($consumerKey, $callbackUri);
+    function createTemporaryCredentials($consumerKey, $callbackUri);
 
     /**
      * Get a verification code for the given temporary token.
@@ -55,7 +55,7 @@ interface StorageInterface
      * @param mixed $user The user that will be bound to the verification code.
      * @return void
      */
-    public function createVerificationCode($temporaryToken, $user);
+    function createVerificationCode($temporaryToken, $user);
 
     /**
      * Get the callback uri of the given temporary token.
@@ -64,7 +64,7 @@ interface StorageInterface
      * @param string $temporaryToken A temporary credentials identifier.
      * @return string|null
      */
-    public function getCallbackUri($temporaryToken);
+    function getCallbackUri($temporaryToken);
 
     /**
      * Validate if the given verification code is correct in combination with the temporary token and the consumer key.
@@ -75,7 +75,7 @@ interface StorageInterface
      * @param string $consumerKey A client credentials identifier.
      * @return boolean True if the verification code is valid else FALSE.
      */
-    public function isValidVerifierCode($verifierCode, $temporaryToken, $consumerKey);
+    function isValidVerifierCode($verifierCode, $temporaryToken, $consumerKey);
 
     /**
      * Get temporary credentials for the first part of the authentication process
@@ -84,7 +84,7 @@ interface StorageInterface
      * @param string $consumerKey A client credentials identifier.
      * @return void
      */
-    public function createAccessCredentials($verifierCode, $temporaryToken, $consumerKey);
+    function createAccessCredentials($verifierCode, $temporaryToken, $consumerKey);
 
     /**
      * Get the temporary token secret based on the given temporary token.
@@ -93,7 +93,7 @@ interface StorageInterface
      * @param string $token A temporary token.
      * @return string|null The temporary token secret secret or NULL when the temporary token is unknown.
      */
-    public function getTemporaryTokenSecret($token);
+    function getTemporaryTokenSecret($token);
 
     /**
      * Get the token secret based on the given token.
@@ -102,11 +102,14 @@ interface StorageInterface
      * @param string $token A token.
      * @return string|null The token secret secret or NULL when the token is unknown.
      */
-    public function getTokenSecret($token, $consumerKey);
+    function getTokenSecret($token, $consumerKey);
 
 	/**
-	 * Validate that the given token request has not happened before.
+	 * Validate that the given nonce+timestamp have not happened before.
+	 * This is used for a two-legged oauth server
 	 * See http://tools.ietf.org/html/draft-hammer-oauth-10#section-3.3 for more information.
+	 *
+	 * The nonce value MUST be unique across all requests with the same timestamp, client credentials, and token combinations.
 	 *
 	 * @abstract
 	 * @param string $token A token.
@@ -114,5 +117,5 @@ interface StorageInterface
 	 * @param int $timestamp A timestamp since the Unix Epoch.
 	 * @return bool
 	 */
-	public function isValidTokenRequest($token, $nonce, $timestamp);
+	function isValidRequest(\OAuth\Server\Request\RequestInterface $request);
 }

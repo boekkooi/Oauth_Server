@@ -264,21 +264,22 @@ class Storage implements \OAuth\Server\Storage\StorageInterface
 	}
 
 	/**
-	 * Validate that the given token request has not happened before.
-	 * See http://tools.ietf.org/html/draft-hammer-oauth-10#section-3.3 for more information.
+	 * Validate that the given nonce+timestamp have not happened before.
+	 * This is used for a two-legged oauth server
 	 *
-	 * @abstract
-	 * @param string $token A token.
 	 * @param string $nonce A Nonce.
 	 * @param int $timestamp A timestamp since the Unix Epoch.
 	 * @return bool
 	 */
-	public function isValidTokenRequest($token, $nonce, $timestamp) {
-        $sql = 'INSERT INTO `oauth_token_request` (`token`, `nonce`, `timestamp`) VALUES (:token, :nonce, :ts)';
+	function isValidRequest(\OAuth\Server\Request\RequestInterface $request) {
+		$requestParams = $request->getParams();
+		ksort($requestParams);
+		
+        $sql = 'INSERT INTO `oauth_request` (`request`, `nonce`, `timestamp`) VALUES (:request, :nonce, :ts)';
         $params = array(
-            'token' => $token,
-            'nonce' => $nonce,
-            'ts' => date('Y-m-d H:i:s.u', $timestamp)
+			'request' => md5($request->getRequestUri() . "\n" . json_encode($requestParams)),
+            'nonce' => $request->getParam('oauth_nonce'),
+            'ts' => date('Y-m-d H:i:s.u', $request->getParam('oauth_timestamp'))
         );
 
 		return $this->execSingleRow($sql, $params);

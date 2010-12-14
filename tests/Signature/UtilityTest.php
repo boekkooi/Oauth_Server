@@ -24,9 +24,9 @@ class UtilityTest extends \PHPUnit_Framework_TestCase {
 
 	public function validMethodProviders() {
 		return array(
-			array('HMAC-SHA1', array('\OAuth\Server\Signature\Hmac', 'SHA1')),
-			array('HMAC-SHA256', array('\OAuth\Server\Signature\Hmac', 'SHA256')),
-			array('PLAINTEXT', array('\OAuth\Server\Signature\Plaintext', null))
+			array('HMAC-SHA1', array('OAuth\Server\Signature\Hmac', 'SHA1')),
+			array('HMAC-SHA256', array('OAuth\Server\Signature\Hmac', 'SHA256')),
+			array('PLAINTEXT', array('OAuth\Server\Signature\Plaintext', null))
 		);
 	}
 

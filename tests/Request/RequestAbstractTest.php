@@ -139,7 +139,7 @@ class RequestAbstractTest extends \PHPUnit_Framework_TestCase
         $request->setHeader('Authorization', $config->getHttpUtility()->toAuthorizationHeader($params));
         $this->request->analyze($request);
         $this->assertEquals($params, $this->request->getRawParams());
-        $this->assertEquals($this->request->getRequestUri(), 'http://:');
+        $this->assertEquals($this->request->getRequestUri(), 'http://');
 	}
 
     public function testFailAnalyzeHeader()

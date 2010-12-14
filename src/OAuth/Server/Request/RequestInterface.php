@@ -35,13 +35,13 @@ interface RequestInterface {
 	 * @param Zend_Controller_Request_Http $request An Zend_Controller_Request_Http instance.
 	 * @return void
 	 */
-	public function analyze(\Zend_Controller_Request_Http $request);
+	function analyze(\Zend_Controller_Request_Http $request);
 
-	public function setConfig(\OAuth\Server\Config $config);
+	function setConfig(\OAuth\Server\Config $config);
 
-	public function getParam($name);
+	function getParam($name);
 
-	public function getParams();
+	function getParams();
 
-	public function getRequestUri();
+	function getRequestUri();
 }

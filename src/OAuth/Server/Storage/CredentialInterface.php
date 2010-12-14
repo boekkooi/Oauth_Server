@@ -34,7 +34,7 @@ interface CredentialInterface {
 	 * @abstract
 	 * @return string The token/identifier.
 	 */
-	public function getToken();
+	function getToken();
 	
 	/**
 	 * Get the secret
@@ -42,5 +42,5 @@ interface CredentialInterface {
 	 * @abstract
 	 * @return string The secret.
 	 */
-	public function getSecret();
+	function getSecret();
 }

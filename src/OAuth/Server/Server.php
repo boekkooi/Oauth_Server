@@ -2,6 +2,8 @@
 namespace OAuth\Server;
 
 /**
+ * three-legged oauth server
+ *
  * @package OAuth_Server
  * @author Warnar Boekkooi
  *
@@ -52,13 +54,8 @@ class Server {
 		// Get storage adapter
 		$storage = $this->cfg->getStorage();
 
-        // Validate/get the consumer secret
-		$consumerSecret = $this->getConsumerSecret($request);
-		
-        // Validate the request signature
-        if (!$this->cfg->getSignatureUtility()->verifySignature($request->getRequestUri(), $request->getParams(), $consumerSecret)) {
-            throw new \Exception('Invalid request. Invalid signature detected.');
-        }
+		// Validate if the consumer has access
+		$this->consumerAccess($httpRequest);
 
         // Get/create temporary credentials (identifier and shared-secret)
         $credentials = $storage->createTemporaryCredentials($request->getParam('consumer_key'), $request->getParam('oauth_callback'));
@@ -83,13 +80,17 @@ class Server {
 
 		// Get storage adapter
 		$storage = $this->cfg->getStorage();
-		
+
+		// Validate that the request
+		if (!$storage->isValidRequest($request)) {
+            throw new \Exception('Invalid request. Possible replay attack.');
+		}
+
         // Get the temporary credentials identifier
         $token = $request->getParam('oauth_token');
 		if (empty($token)) {
             throw new \Exception('Invalid request');
 		}
-
         // Get a oauth verification code.
         $verifyCode = $storage->createVerificationCode($token, $user);
         if (empty($verifyCode)) {
@@ -137,6 +138,11 @@ class Server {
 		// Get storage adapter
 		$storage = $this->cfg->getStorage();
 
+		// Validate that the request
+		if (!$this->cfg->getStorage()->isValidRequest($request)) {
+            throw new \Exception('Invalid request. Possible replay attack.');
+		}
+
 		// Verify the access request
 		$this->verifyAccessRequest($request, true);
 
@@ -166,16 +172,50 @@ class Server {
 		$request = $this->cfg->getAccessRequest();
 		$request->setConfig($this->cfg)->analyze($httpRequest);
 
+		// Validate that the request
+		if (!$this->cfg->getStorage()->isValidRequest($request)) {
+            throw new \Exception('Invalid request. Possible replay attack.');
+		}
+
 		// Verify the access request
 		$this->verifyAccessRequest($request);
 		
 		return true;
 	}
 
+	public function consumerAccess(\Zend_Controller_Request_Http $httpRequest) {
+        // Create a server request and analyze the given httpRequest
+		$request = $this->cfg->getInitiateRequest();
+		$request->setConfig($this->cfg)->analyze($httpRequest);
+
+		// Get storage adapter
+		$storage = $this->cfg->getStorage();
+
+        // Validate/get the consumer secret
+		$consumerSecret = $this->getConsumerSecret($request);
+
+		// Validate request
+		if (!$storage->isValidRequest($request)) {
+            throw new \Exception('Invalid request. Possible replay attack.');
+		}
+
+        // Validate the request signature
+        if (!$this->cfg->getSignatureUtility()->verifySignature($request->getRequestUri(), $request->getParams(), $consumerSecret)) {
+            throw new \Exception('Invalid request. Invalid signature detected.');
+        }
+
+        return true;
+	}
+
 	public function getAccessInformation(\Zend_Controller_Request_Http $httpRequest) {
         // Create a server request and analyze the given httpRequest
 		$request = $this->cfg->getAccessRequest();
 		$request->setConfig($this->cfg)->analyze($httpRequest);
+
+		// Validate that the request
+		if (!$this->cfg->getStorage()->isValidRequest($request)) {
+            throw new \Exception('Invalid request. Possible replay attack.');
+		}
 
 		// Verify the access request
 		$this->verifyAccessRequest($request);
@@ -216,7 +256,7 @@ class Server {
         }
 
 		// Validate that the request is the first one (see: http://tools.ietf.org/html/draft-hammer-oauth-10#section-3.3)
-		if (!$storage->isValidTokenRequest($request->getParam('token'), $request->getParam('oauth_nonce'), $request->getParam('oauth_timestamp'))) {
+		if (!$storage->isValidRequest($request)) {
             throw new \Exception('Invalid request. Possible replay attack.');
 		}
 	}

@@ -5,7 +5,7 @@ class StorageTest extends \PHPUnit_Extensions_Database_TestCase {
     protected $pdo;
 
     public function __construct() {
-        $this->pdo = new \PDO('mysql:host=localhost;dbname=oauth', 'test', '');
+        $this->pdo = new \PDO('mysql:host=localhost;dbname=oauth', 'root', '');
 
         $sql = file_get_contents(dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'Fixture/oauth_test.sql');
         $statements = explode(';', $sql);
@@ -58,22 +58,41 @@ class StorageTest extends \PHPUnit_Extensions_Database_TestCase {
         $this->assertNull($instance->getCustomerSecret('invalid'));
     }
 
-    public function testIsValidTokenRequest() {
+    public function testIsValidRequest() {
         $pdo = $this->getConnection()->getConnection();
         $instance = new \OAuth\Server\Storage\Pdo\Storage($pdo);
 
-        $time = time();
-        $this->assertTrue($instance->isValidTokenRequest('a', 'b', $time));
-        $this->assertTrue($instance->isValidTokenRequest('a', 'a', $time));
-        $this->assertTrue($instance->isValidTokenRequest('b', 'b', $time));
+		$request = new \Tests\Mock\Request\RequestAbstract();
+		$params = array(
+		   'oauth_timestamp' => time(),
+		   'oauth_consumer_key' => 'a',
+		   'oauth_nonce' => 'a',
+	   );
+
+		$request->setRawParams($params);
+        $this->assertTrue($instance->isValidRequest($request));
+
+		$params['oauth_nonce'] = 'b';
+		$request->setRawParams($params);
+        $this->assertTrue($instance->isValidRequest($request));
+
+		$params['oauth_consumer_key'] = 'b';
+		$request->setRawParams($params);
+        $this->assertTrue($instance->isValidRequest($request));
     }
 
     public function testFailIsValidTokenRequest() {
         $pdo = $this->getConnection()->getConnection();
         $instance = new \OAuth\Server\Storage\Pdo\Storage($pdo);
 
-        $time = time();
-        $this->assertTrue($instance->isValidTokenRequest('c', 'c', $time));
-        $this->assertFalse($instance->isValidTokenRequest('c', 'c', $time));
+		$request = new \Tests\Mock\Request\RequestAbstract();
+		$request->setRawParams(array(
+		   'oauth_timestamp' => time(),
+		   'oauth_consumer_key' => 'a',
+		   'oauth_nonce' => 'new',
+	   ));
+
+        $this->assertTrue($instance->isValidRequest($request));
+        $this->assertFalse($instance->isValidRequest($request));
     }
 }
